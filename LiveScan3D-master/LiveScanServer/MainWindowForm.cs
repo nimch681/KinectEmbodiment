@@ -87,16 +87,9 @@ namespace KinectServer
             oTransferServer.lVertices = lAllVertices;
             oTransferServer.lColors = lAllColors;
             oTransferServer.IBodies = lAllBodies;//just added this 
-
-            //int numJoints = lAllBodies[0].lJoints.Count;
-            //for (int i = 0; i < numJoints; i++)
-            //{
-            //    float x = lAllBodies[0].lJoints[i].position.X;
-            //    //float y  ....
-
-            //    JointType jointType = lAllBodies[0].lJoints[i].jointType;
-            //    short JT = (short)jointType;
-            //}
+            
+            
+            
 
             InitializeComponent();
         }
@@ -292,6 +285,17 @@ namespace KinectServer
                     }
 
                     lAllCameraPoses.AddRange(oServer.lCameraPoses);
+                }
+
+                for (int i = 0; i < 2; i++)
+                {
+                    float x = lAllBodies[0].lJoints[i].position.X;
+                    //float y  ....
+
+                    JointType jointType = lAllBodies[0].lJoints[i].jointType;
+                    short JT = (short)jointType;
+
+                    Console.Write(JT);
                 }
 
                 //Notes the fact that a new frame was downloaded, this is used to estimate the FPS.
