@@ -1,4 +1,4 @@
-Kinect side of the mirror embodiment project. The project is build on top of the LiveScan3D project. Thanks to everyone from LiveScan3D for allowing us to use their code
+Kinect side of the mirror embodiment project. The project is built on top of the LiveScan3D project. Thanks to everyone from LiveScan3D for allowing us to use their code
 
 Kowalski, M.; Naruniec, J.; Daniluk, M.: "LiveScan3D: A Fast and Inexpensive 3D Data
 Acquisition System for Multiple Kinect v2 Sensors". in 3D Vision (3DV), 2015 International Conference on, Lyon, France, 2015
