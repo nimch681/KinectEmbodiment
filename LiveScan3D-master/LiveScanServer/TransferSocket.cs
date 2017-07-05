@@ -80,7 +80,7 @@ namespace KinectServer
             {
                 WriteInt(nVerticesToSend);
                 WriteInt(somestringByte.Length);
-                //oSocket.GetStream().Write(somestringByte.ToArray(), 0, sizeof(byte) * somestringByte.Length);
+                oSocket.GetStream().Write(somestringByte.ToArray(), 0, sizeof(byte) * somestringByte.Length);
                 oSocket.GetStream().Write(buffer, 0, buffer.Length);
                 oSocket.GetStream().Write(colors.ToArray(), 0, sizeof(byte) * 3 * nVerticesToSend);
             }
