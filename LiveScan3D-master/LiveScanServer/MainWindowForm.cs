@@ -287,16 +287,37 @@ namespace KinectServer
                     lAllCameraPoses.AddRange(oServer.lCameraPoses);
                 }
 
-                for (int i = 0; i < 2; i++)
-                {
-                    float x = lAllBodies[0].lJoints[i].position.X;
-                    //float y  ....
+                //for (int i = 0; i < 6; i++)
+                //{
 
-                    JointType jointType = lAllBodies[0].lJoints[i].jointType;
-                    short JT = (short)jointType;
+                //    if (lAllBodies[i].bTracked)
+                //    {
+                //        float x = lAllBodies[i].lJoints[0].position.X;
+                //        float y = lAllBodies[i].lJoints[0].position.Y;
+                //        float z = lAllBodies[i].lJoints[0].position.Z;
 
-                    Console.Write(JT);
-                }
+                //        //float y  ....
+
+                //        JointType jointType = lAllBodies[i].lJoints[6].jointType;
+                //        int JT = (int)jointType;
+
+
+                //        Console.Write("Body " + i + " is tracked\n" + 
+                //            "Position (x, y, z): " + x + ", " + y + ", " + z + "\n" +
+                //            "Joint: " + JT + "\n");
+                //    }
+                //    else
+                //    {
+                        //float x = lAllBodies[i].lJoints[0].position.X;
+
+                        //JointType jointType = lAllBodies[i].lJoints[0].jointType;
+                       // int JT = (int)jointType;
+
+                        //Console.Write("Body " + i + " is not tracked " + " Position " + x);
+
+                       //float y  ....
+
+                
 
                 //Notes the fact that a new frame was downloaded, this is used to estimate the FPS.
                 if (oOpenGLWindow != null)

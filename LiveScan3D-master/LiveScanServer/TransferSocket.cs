@@ -68,6 +68,7 @@ namespace KinectServer
 
         public void SendFrame(List<float> vertices, List<byte> colors, List<Body> bodies)
         {
+
             short[] sVertices = Array.ConvertAll(vertices.ToArray(), x => (short)(x * 1000));
 
             string somestring = "Hi I send through";

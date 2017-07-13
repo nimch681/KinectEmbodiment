@@ -188,7 +188,7 @@ void KinectCapture::GetBodyFrame(IMultiSourceFrame* pMultiFrame)
 
 	if (SUCCEEDED(hr))
 	{
-		IBody* bodies[BODY_COUNT] = { NULL };
+		IBody* bodies[BODY_COUNT] = { NULL };////IMPORTANT
 		pBodyFrame->GetAndRefreshBodyData(BODY_COUNT, bodies);
 
 		vBodies = std::vector<Body>(BODY_COUNT);

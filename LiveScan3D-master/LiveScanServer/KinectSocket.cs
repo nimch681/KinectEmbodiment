@@ -42,9 +42,11 @@ namespace KinectServer
 
         public List<byte> lFrameRGB = new List<byte>();
         public List<Single> lFrameVerts = new List<Single>();
-        public List<Body> lBodies = new List<Body>(); 
+        public List<Body> lBodies = new List<Body>();
 
         public event SocketChangedHandler eChanged;
+
+
 
         public KinectSocket(Socket clientSocket)
         {
@@ -60,7 +62,7 @@ namespace KinectServer
         }
 
         public void Calibrate()
-        {            
+        {
             bCalibrated = false;
             sSocketState = oSocket.RemoteEndPoint.ToString() + " Calibrated = false";
 
@@ -150,6 +152,7 @@ namespace KinectServer
 
         public void ReceiveFrame()
         {
+
             lFrameRGB.Clear();
             lFrameVerts.Clear();
             lBodies.Clear();
@@ -187,7 +190,7 @@ namespace KinectServer
                 nAlreadyRead += oSocket.Receive(buffer, nAlreadyRead, nToRead - nAlreadyRead, SocketFlags.None);
             }
 
-            
+
 
 
             if (iCompressed == 1)
@@ -198,21 +201,29 @@ namespace KinectServer
 
             int n_vertices = BitConverter.ToInt32(buffer, startIdx);
             startIdx += 4;
-
+            List<Single> TempVerts = new List<Single>();
+            List<byte> TempRGB = new List<byte>();
             for (int i = 0; i < n_vertices; i++)
             {
+
+
                 for (int j = 0; j < 3; j++)
                 {
-                    lFrameRGB.Add(buffer[startIdx++]);
+
+                    TempRGB.Add(buffer[startIdx++]);
                 }
                 for (int j = 0; j < 3; j++)
                 {
                     float val = BitConverter.ToInt16(buffer, startIdx);
                     //converting from milimeters to meters
                     val /= 1000.0f;
-                    lFrameVerts.Add(val);
+                    TempVerts.Add(val);
+
                     startIdx += 2;
                 }
+
+
+
             }
 
             //Receive body data
@@ -255,8 +266,107 @@ namespace KinectServer
 
                 lBodies.Add(tempBody);
 
-              
+
+
             }
+
+
+
+
+            List<Single> HeadVert = new List<Single>();
+            List<byte> HeadRGB = new List<byte>();
+            //{
+            for (int i = 0; i < 6; i++)
+            {
+
+                if (lBodies[i].bTracked)
+                {
+                    float NeckX = lBodies[i].lJoints[3].position.X;
+                    float NeckY = lBodies[i].lJoints[3].position.Y;
+                    float NeckZ = lBodies[i].lJoints[3].position.Z;
+
+                    //Console.Write("Neck poisition in y" + NeckY + " x " + NeckX + " z " + NeckZ +  "\n");
+
+                    int pdidx = 0;
+                    int count = 0;
+                    int nAllVertices = n_vertices*3;
+                    while (pdidx < nAllVertices)
+                    {
+
+                        if (TempVerts[pdidx + 1] >= NeckY)
+                        {
+                            if (count == 37)
+                            {
+                                //Console.Write("This is working \n point at position pdidx x: " + TempVerts[pdidx] + " y: " + TempVerts[pdidx + 1] +" pdidx z: " + TempVerts[pdidx + 2]  + "\n");
+                                
+                                //Console.Write("This is working \n point at position  pdidx + 1 " + (pdidx) + "\n");
+                                //Console.Write("This is working \n point at position value of x  pdidx " + (TempVerts[pdidx]) + "\n");
+                                
+                            }
+
+                            HeadVert.Add(TempVerts[pdidx]);
+                            HeadVert.Add(TempVerts[pdidx + 1]);
+                            HeadVert.Add(TempVerts[pdidx + 2]);
+
+                            HeadRGB.Add(TempRGB[pdidx]);
+                            HeadRGB.Add(TempRGB[pdidx + 1]);
+                            HeadRGB.Add(TempRGB[pdidx + 2]);
+
+
+
+                            count++;
+                            
+
+                            //if (TempVerts[pdidx + 1] <= NeckY + 0.40f && TempVerts[pdidx + 1] >= NeckY)
+                            //{
+                                //Console.Write("This is working \n point at position pdidx y" + pdidx + "\n");
+                                //Console.Write("This is working \n point at position  pdidx + 1 " + (pdidx + 1) + "\n");
+                                //Console.Write("This is working \n point at position value of y  pdidx " + (TempVerts[pdidx + 1]) + "\n");
+                               
+                                
+                            //}
+                        }
+
+                        pdidx += 3;
+
+                    }
+
+                    
+                    //JointType jointType = lBodies[i].lJoints[3].jointType;
+                    //int JT = (int)jointType;
+
+
+                    //Console.Write("Body " + i + " is tracked\n" +
+                    // "Position (x, y, z): " + headX + ", " + headY + ", " + headZ + "\n" +
+                    // "Joint: " + JT + "\n");
+                }
+            }
+
+            Console.Write("Head count " + HeadVert.Count + "\n");
+            Console.Write("All vert count " + TempVerts.Count + "\n");
+            lFrameRGB = HeadRGB;
+            lFrameVerts = HeadVert;
+
+            //    //        //float x = lBodies[i].lJoints[3].position.X;
+
+            //    //        //JointType jointType = lBodies[i].lJoints[3].jointType;
+            //    //        //int JT = (int)jointType;
+
+            //    //        //Console.Write("Body " + i + " is not tracked " + " Position " + x);
+
+            //    //        // float y  ....
+
+
+
+            //    //}
+            //}
+
+        }
+
+        float DistanceN(float[] first, float[] second)
+        {
+            var sum = first.Select((x, i) => (x - second[i]) * (x - second[i])).Sum();
+            return (float)Math.Sqrt(sum);
         }
 
         public byte[] Receive(int nBytes)

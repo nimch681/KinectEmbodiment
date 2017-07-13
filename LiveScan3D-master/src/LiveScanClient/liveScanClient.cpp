@@ -761,7 +761,7 @@ void LiveScanClient::StoreFrame(Point3f *vertices, Point2f *mapping, RGB *color,
 		goodVerticesShort[i] = goodVertices[i];
 	}
 
-	m_vLastFrameBody = tempBodies;
+	m_vLastFrameBody = tempBodies; 
 	m_vLastFrameVertices = goodVerticesShort;
 	m_vLastFrameRGB = goodColorPoints;
 

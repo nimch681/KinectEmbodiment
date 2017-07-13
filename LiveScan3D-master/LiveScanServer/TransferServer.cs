@@ -111,7 +111,7 @@ namespace KinectServer
                             {
                                 lock (lVertices)
                                 {
-                                    lClientSockets[i].SendFrame(lVertices, lColors, IBodies);
+                                    lClientSockets[i].SendFrame(lVertices, lColors);
                                 }
                             }
 
