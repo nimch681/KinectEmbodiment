@@ -50,13 +50,13 @@ namespace KinectServer
         public void SendFrame(List<float> vertices, List<byte> colors)
         {
             short[] sVertices = Array.ConvertAll(vertices.ToArray(), x => (short)(x * 1000));
-
-            
+           
             int nVerticesToSend = vertices.Count / 3;
             byte[] buffer = new byte[sizeof(short) * 3 * nVerticesToSend];
             Buffer.BlockCopy(sVertices, 0, buffer, 0, sizeof(short) * 3 * nVerticesToSend);
             try
-            {                 
+            {
+               
                 WriteInt(nVerticesToSend);                               
                 oSocket.GetStream().Write(buffer, 0, buffer.Length);
                 oSocket.GetStream().Write(colors.ToArray(), 0, sizeof(byte) * 3 * nVerticesToSend);
@@ -66,24 +66,26 @@ namespace KinectServer
             }
         }
 
-        public void SendFrame(List<float> vertices, List<byte> colors, List<Body> bodies)
-        {
 
+        public void SendFrame(List<float> vertices, List<byte> colors, String message)
+        {
             short[] sVertices = Array.ConvertAll(vertices.ToArray(), x => (short)(x * 1000));
 
-            string somestring = "Hi I send through";
+            string somestring = message;
             byte[] somestringByte = Encoding.ASCII.GetBytes(somestring);
-
             int nVerticesToSend = vertices.Count / 3;
             byte[] buffer = new byte[sizeof(short) * 3 * nVerticesToSend];
             Buffer.BlockCopy(sVertices, 0, buffer, 0, sizeof(short) * 3 * nVerticesToSend);
             try
             {
                 WriteInt(nVerticesToSend);
-                WriteInt(somestringByte.Length);
-                oSocket.GetStream().Write(somestringByte.ToArray(), 0, sizeof(byte) * somestringByte.Length);
+                WriteInt(14);
+                //oSocket.GetStream().Write(somestringByte, 0, sizeof(byte) * somestringByte.Length);
+
                 oSocket.GetStream().Write(buffer, 0, buffer.Length);
                 oSocket.GetStream().Write(colors.ToArray(), 0, sizeof(byte) * 3 * nVerticesToSend);
+
+                WriteInt(somestringByte.Length);
             }
             catch (Exception ex)
             {
@@ -91,39 +93,5 @@ namespace KinectServer
         }
 
 
-        //public void SendFrame(List<float> vertices, List<byte> colors, List<Body> bodies)
-        //{
-        //    int numJoints = bodies[0].lJoints.Count;
-
-        //    for (int i = 0; i < numJoints; i++)
-        //    {
-        //       float x = bodies[0].lJoints[i].position.X;
-        //        //float y  ....
-
-        //       JointType jointType = bodies[0].lJoints[i].jointType;
-        //        short JT = (short)jointType;
-        //    }
-
-        //    short[] sVertices = Array.ConvertAll(vertices.ToArray(), x => (short)(x * 1000));
-        //    string somestring = "Hi I send through";
-        //    byte[] somestringByte = Encoding.ASCII.GetBytes(somestring);
-
-        //    int nVerticesToSend = vertices.Count / 3;
-        //    byte[] buffer = new byte[sizeof(short) * 3 * nVerticesToSend];
-        //    byte[] buffer2 = new byte[sizeof(short) * 3 * nVerticesToSend];
-        //    Buffer.BlockCopy(sVertices, 0, buffer, 0, sizeof(short) * 3 * nVerticesToSend);
-        //    try
-        //    {
-        //        WriteInt(nVerticesToSend);
-        //       // WriteInt(somestringByte.Length);
-        //        oSocket.GetStream().Write(buffer, 0, buffer.Length);
-        //        oSocket.GetStream().Write(colors.ToArray(), 0, sizeof(byte) * 3 * nVerticesToSend);
-        //       // oSocket.GetStream().Write(somestringByte, 0 , somestringByte.Length);
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //    }
-        //}
     }
 }

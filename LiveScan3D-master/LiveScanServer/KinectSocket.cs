@@ -190,9 +190,6 @@ namespace KinectServer
                 nAlreadyRead += oSocket.Receive(buffer, nAlreadyRead, nToRead - nAlreadyRead, SocketFlags.None);
             }
 
-
-
-
             if (iCompressed == 1)
                 buffer = ZSTDDecompressor.Decompress(buffer);
 
@@ -201,8 +198,7 @@ namespace KinectServer
 
             int n_vertices = BitConverter.ToInt32(buffer, startIdx);
             startIdx += 4;
-            List<Single> TempVerts = new List<Single>();
-            List<byte> TempRGB = new List<byte>();
+          
             for (int i = 0; i < n_vertices; i++)
             {
 
@@ -210,14 +206,14 @@ namespace KinectServer
                 for (int j = 0; j < 3; j++)
                 {
 
-                    TempRGB.Add(buffer[startIdx++]);
+                    lFrameRGB.Add(buffer[startIdx++]);
                 }
                 for (int j = 0; j < 3; j++)
                 {
                     float val = BitConverter.ToInt16(buffer, startIdx);
                     //converting from milimeters to meters
                     val /= 1000.0f;
-                    TempVerts.Add(val);
+                    lFrameVerts.Add(val);
 
                     startIdx += 2;
                 }
@@ -269,118 +265,7 @@ namespace KinectServer
 
 
             }
-
-
-
-            /**body segmentation starts here*/
-
-
-            List<Single> HeadVert = new List<Single>();
-            List<byte> HeadRGB = new List<byte>();
-            List<Single> RighHandtVert = new List<Single>();
-            List<byte> RightHandRGB = new List<byte>();
-            List<Single> LeftLegVert = new List<Single>();
-            List<byte> LeftLegRGB = new List<byte>();
-            List<Single> LowerabdomenVert = new List<Single>();
-            List<byte> LowerabdomenRGB = new List<byte>();
-
-            List<Single> UpperabdomenVert = new List<Single>();
-            List<byte> UpperabdomenRGB = new List<byte>();
-
-            List<Single> HeadX = new List<Single>();
-            List<Single> HeadY = new List<Single>();
-            List<Single> HeadZ = new List<Single>();
-
-            List<Single> LowerabdomenX = new List<Single>();
-            List<Single> LowerabdomenY = new List<Single>();
-            List<Single> LowerabdomenZ = new List<Single>();
-
-
-            List<Single> UpperabdomenX = new List<Single>();
-            List<Single> UpperabdomenY = new List<Single>();
-            List<Single> UpperabdomenZ = new List<Single>();
-
-            for (int i = 0; i < 6; i++)
-            {
-
-                if (lBodies[i].bTracked)
-                {
-                   
-
-                    int pdidx = 0;
-                    int nAllVertices = n_vertices*3;
-                    while (pdidx < nAllVertices)
-                    {
-                        BodySegmentWithVerticesArray(HeadVert, HeadRGB,lBodies, i, 3, TempVerts, TempRGB, pdidx, 0.15f, 0.15f, 0.10f, 0.15f, 0.15f, 0.15f, HeadX, HeadY, HeadZ );
-                        BodySegment(RighHandtVert, RightHandRGB,lBodies, i, 11, TempVerts, TempRGB, pdidx, 0.10f, 0.10f, 0.10f, 0.10f, 0.05f, 0.05f);
-
-                        
-                       
-
-                        float ShoulderY = lBodies[i].lJoints[20].position.Y;
-                       
-                        
-                       // BodySegmentWithAbsoluteMaxY(UpperabdomenVert, UpperabdomenRGB, lBodies, i, 1, TempVerts, TempRGB, pdidx, 0.20f, 0.20f, 0f, ShoulderY, 0.10f, 0.10f, UpperabdomenX, UpperabdomenY, UpperabdomenZ);
-
-                        BodySegmentWithAbsoluteMaxY(LowerabdomenVert, LowerabdomenRGB, lBodies, i, 0, TempVerts, TempRGB, pdidx, 0.20f, 0.20f, 0f, ShoulderY, 0.20f, 0.20f, LowerabdomenX, LowerabdomenY, LowerabdomenZ);
-
-                        // BodySegment(SpineMidVert, SpineMidRGB, lBodies, i, 19, TempVerts, TempRGB, pdidx, 0.20f, 0.20f, SpineBaseY - , , 0.30f, 0.30f);
-                        pdidx += 3;
-
-                    }
-
-                   
-
-
-                    //JointType jointType = lBodies[i].lJoints[3].jointType;
-                    //int JT = (int)jointType;
-
-
-                    //Console.Write("Body " + i + " is tracked\n" +
-                    // "Position (x, y, z): " + headX + ", " + headY + ", " + headZ + "\n" +
-                    // "Joint: " + JT + "\n");
-                }
-
-                scale(lBodies, i ,HeadVert, 1.5f, 1f, 1.5f, HeadX, HeadY, HeadZ);
-               // scale(lBodies, i, UpperabdomenVert, 1.5f, 1f, 1.5f, UpperabdomenX, UpperabdomenY, UpperabdomenZ);
-                scale(lBodies, i, LowerabdomenVert, 1.5f, 1f, 1.5f, LowerabdomenX, LowerabdomenY, LowerabdomenZ);
-            }
-
-
-
-
-
-            // Console.Write("Tempdvert size : " + TempVerts.Count + "\n");
-            //Console.Write("TempRGB size : " + TempRGB.Count + "\n");
-
-            //scale(HeadVert, 1.5f, 2f, 2f, HeadX, HeadY, HeadZ);
-
-
-            // lFrameVerts.AddRange(RighHandtVert);
-            //lFrameRGB.AddRange(RightHandRGB);
-            lFrameVerts.AddRange(LowerabdomenVert);
-            lFrameRGB.AddRange(LowerabdomenRGB);
-
-            //lFrameVerts.AddRange(UpperabdomenVert);
-           // lFrameRGB.AddRange(UpperabdomenRGB);
-
-            lFrameVerts.AddRange(HeadVert);
-            lFrameRGB.AddRange(HeadRGB);
-            
-            //    //        //float x = lBodies[i].lJoints[3].position.X;
-
-            //    //        //JointType jointType = lBodies[i].lJoints[3].jointType;
-            //    //        //int JT = (int)jointType;
-
-            //    //        //Console.Write("Body " + i + " is not tracked " + " Position " + x);
-
-            //    //        // float y  ....
-
-
-
-            //    //}
-            //}
-
+ 
         }
 
         float DistanceN(float[] first, float[] second)
@@ -436,234 +321,6 @@ namespace KinectServer
 
         
 
-        public void BodySegmentWithVerticesArray(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
-            List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
-        {
-            
-
-            if (body[bodyIndex].bTracked)
-            {
-                //Console.Write("This is working bodyIndex " + bodyIndex);
-                float jointX = lBodies[bodyIndex].lJoints[JointIndex].position.X;
-                float jointY = lBodies[bodyIndex].lJoints[JointIndex].position.Y;
-                float jointZ = lBodies[bodyIndex].lJoints[JointIndex].position.Z;
-
-               // Console.Write("This is working Joint X " + jointX + "\n");
-
-                if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
-                {
-                    //Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                    if (vertArray[vertIndex + 1] <= jointY + maxY && vertArray[vertIndex + 1] >= jointY - minY)
-                    {
-                       // Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                        if (vertArray[vertIndex + 2] <= jointZ + maxZ && vertArray[vertIndex + 2] >= jointZ - minZ)
-                        {
-
-
-                            BodyPartVert.Add(vertArray[vertIndex]);
-                            BodyPartVert.Add(vertArray[vertIndex + 1]);
-                            BodyPartVert.Add(vertArray[vertIndex + 2]);
-                            Xlist.Add(vertArray[vertIndex]);
-                            Ylist.Add(vertArray[vertIndex + 1]);
-                            Zlist.Add(vertArray[vertIndex + 2]);
-                            BodyPartRGB.Add(RGBArray[vertIndex]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 1]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 2]);
-
-                        }
-
-                    }
-
-                }
-            }
-           
-        }
-
-        public void BodySegment(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
-            List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ)
-        {
-
-
-            if (body[bodyIndex].bTracked)
-            {
-                //Console.Write("This is working bodyIndex " + bodyIndex);
-                float jointX = lBodies[bodyIndex].lJoints[JointIndex].position.X;
-                float jointY = lBodies[bodyIndex].lJoints[JointIndex].position.Y;
-                float jointZ = lBodies[bodyIndex].lJoints[JointIndex].position.Z;
-
-                // Console.Write("This is working Joint X " + jointX + "\n");
-                
-               
-                if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
-                {
-                    //Console.Write("This is working vertIndex " + vertIndex + "\n");
-                   
-                    if (vertArray[vertIndex + 1] <= jointY + maxY && vertArray[vertIndex + 1] >= jointY - minY)
-                    {
-                        // Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                        if (vertArray[vertIndex + 2] <= jointZ + maxZ && vertArray[vertIndex + 2] >= jointZ - minZ)
-                        {
-
-
-                            BodyPartVert.Add(vertArray[vertIndex]);
-                            BodyPartVert.Add(vertArray[vertIndex + 1]);
-                            BodyPartVert.Add(vertArray[vertIndex + 2]);
-
-                            BodyPartRGB.Add(RGBArray[vertIndex]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 1]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 2]);
-
-                        }
-
-                    }
-
-                }
-            }
-
-        }
-
-        public void BodySegmentWithAbsoluteMaxY(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
-            List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
-        {
-
-
-            if (body[bodyIndex].bTracked)
-            {
-                //Console.Write("This is working bodyIndex " + bodyIndex);
-                float jointX = lBodies[bodyIndex].lJoints[JointIndex].position.X;
-                float jointY = lBodies[bodyIndex].lJoints[JointIndex].position.Y;
-                float jointZ = lBodies[bodyIndex].lJoints[JointIndex].position.Z;
-
-                // Console.Write("This is working Joint X " + jointX + "\n");
-
-
-                if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
-                {
-                    //Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                    if (vertArray[vertIndex + 1] < maxY && vertArray[vertIndex + 1] >= jointY - minY)
-                    {
-                        // Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                        if (vertArray[vertIndex + 2] <= jointZ + maxZ && vertArray[vertIndex + 2] >= jointZ - minZ)
-                        {
-
-
-                            BodyPartVert.Add(vertArray[vertIndex]);
-                            BodyPartVert.Add(vertArray[vertIndex + 1]);
-                            BodyPartVert.Add(vertArray[vertIndex + 2]);
-                            Xlist.Add(vertArray[vertIndex]);
-                            Ylist.Add(vertArray[vertIndex + 1]);
-                            Zlist.Add(vertArray[vertIndex + 2]);
-                            BodyPartRGB.Add(RGBArray[vertIndex]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 1]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 2]);
-
-                        }
-
-                    }
-
-                }
-            }
-
-        }
-
-        public void BodySegmentWithAbsoluteMinY(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
-           List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
-        {
-
-
-            if (body[bodyIndex].bTracked)
-            {
-                //Console.Write("This is working bodyIndex " + bodyIndex);
-                float jointX = lBodies[bodyIndex].lJoints[JointIndex].position.X;
-                float jointY = lBodies[bodyIndex].lJoints[JointIndex].position.Y;
-                float jointZ = lBodies[bodyIndex].lJoints[JointIndex].position.Z;
-
-                // Console.Write("This is working Joint X " + jointX + "\n");
-
-
-                if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
-                {
-                    //Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                    if (vertArray[vertIndex + 1] < maxY && vertArray[vertIndex + 1] >= minY)
-                    {
-                        // Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                        if (vertArray[vertIndex + 2] <= jointZ + maxZ && vertArray[vertIndex + 2] >= jointZ - minZ)
-                        {
-
-
-                            BodyPartVert.Add(vertArray[vertIndex]);
-                            BodyPartVert.Add(vertArray[vertIndex + 1]);
-                            BodyPartVert.Add(vertArray[vertIndex + 2]);
-                            Xlist.Add(vertArray[vertIndex]);
-                            Ylist.Add(vertArray[vertIndex + 1]);
-                            Zlist.Add(vertArray[vertIndex + 2]);
-                            BodyPartRGB.Add(RGBArray[vertIndex]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 1]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 2]);
-
-                        }
-
-                    }
-
-                }
-            }
-
-        }
-
-        public void scale(List<Body> body, int bodyIndex, List<Single> vertices, float scaleFactorX, float scaleFactorY, float scaleFactorZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
-        {
-
-            if (body[bodyIndex].bTracked)
-            {
-
-                float centerX = Center(Xlist);
-                float centerY = Center(Ylist);
-                float centerZ = Center(Zlist);
-
-                Console.Write("The center is " + " X: " + centerX + " Y: " + centerY + " Z: " + centerZ + " \n");
-                int verticesToread = 0;
-                while (verticesToread < vertices.Count)
-                {
-                    vertices[verticesToread] = ((vertices[verticesToread] - centerX) * scaleFactorX) + centerX;
-                    vertices[verticesToread + 1] = ((vertices[verticesToread + 1] - centerY) * scaleFactorY) + centerY;
-                    vertices[verticesToread + 2] = ((vertices[verticesToread + 2] - centerZ) * scaleFactorZ) + centerZ;
-
-                    verticesToread += 3;
-                }
-            }
-            
-        }
-
-        public float sum(List<Single> co)
-        {
-            float result = 0;
-
-            for (int i = 0; i < co.Count; i++)
-            {
-                result += co[i];
-            }
-
-            return result;
-        }
-
-        public float Average(List<Single> co)
-        {
-            float s = sum(co);
-            float result = (float)s / co.Count;
-            return result;
-        }
-
-        public float Center(List<Single> co)
-        {
-            return Average(co);
-        }
 
     }
 }
