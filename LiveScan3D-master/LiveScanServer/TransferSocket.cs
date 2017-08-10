@@ -67,25 +67,30 @@ namespace KinectServer
         }
 
 
-        public void SendFrame(List<float> vertices, List<byte> colors, String message)
+        public void SendFrame(List<float> vertices, List<byte> colors, bool resetting)
         {
             short[] sVertices = Array.ConvertAll(vertices.ToArray(), x => (short)(x * 1000));
 
-            string somestring = message;
-            byte[] somestringByte = Encoding.ASCII.GetBytes(somestring);
+            int numReset = 0;
+            if(resetting == true)
+            {
+                numReset = 1;
+            }
+            
+           
             int nVerticesToSend = vertices.Count / 3;
             byte[] buffer = new byte[sizeof(short) * 3 * nVerticesToSend];
             Buffer.BlockCopy(sVertices, 0, buffer, 0, sizeof(short) * 3 * nVerticesToSend);
             try
             {
                 WriteInt(nVerticesToSend);
-                WriteInt(14);
-                //oSocket.GetStream().Write(somestringByte, 0, sizeof(byte) * somestringByte.Length);
+                
 
                 oSocket.GetStream().Write(buffer, 0, buffer.Length);
                 oSocket.GetStream().Write(colors.ToArray(), 0, sizeof(byte) * 3 * nVerticesToSend);
 
-                WriteInt(somestringByte.Length);
+                //WriteInt(numReset);
+                //oSocket.GetStream().Write(somestringByte, 0, sizeof(byte) * somestringByte.Length);
             }
             catch (Exception ex)
             {

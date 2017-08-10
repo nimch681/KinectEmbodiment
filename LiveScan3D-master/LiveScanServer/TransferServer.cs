@@ -15,11 +15,12 @@ namespace KinectServer
     {
         public List<float> lVertices = new List<float>();
         public List<byte> lColors = new List<byte>();
-        public List<Body> IBodies = new List<Body>();// just added
         
+
         TcpListener oListener;
         List<TransferSocket> lClientSockets = new List<TransferSocket>();
 
+       
         object oClientSocketLock = new object();
         bool bServerRunning = false;
 

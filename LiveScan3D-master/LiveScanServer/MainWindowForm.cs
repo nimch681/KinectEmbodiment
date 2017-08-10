@@ -54,6 +54,10 @@ namespace KinectServer
         //Body data from all of the sensors
         List<Body> lAllBodies = new List<Body>();
 
+        List<Single> SizePoint = new List<Single>();
+        List<byte> SizeRGB = new List<byte>();
+       
+
         float size;
 
         bool bServerRunning = false;
@@ -61,7 +65,37 @@ namespace KinectServer
         bool bSaving = false;
 
         //Live view open or not
+
         bool bLiveViewRunning = false;
+
+        private bool BodyView_IsOn;
+
+        public bool BodyViewIsOn
+        {
+            get
+            {
+                return BodyView_IsOn;
+            }
+            set
+            {
+                BodyView_IsOn = value;
+                BodyView.Text = BodyView_IsOn ? "Resizing On" : "Resizing Off";
+            }
+        }
+
+        private bool Stop_IsOn;
+        public bool StopIsOn
+        {
+            get
+            {
+                return Stop_IsOn;
+            }
+            set
+            {
+                Stop_IsOn = value;
+                Stop.Text = Stop_IsOn ? "Stop On" : "Stop Off";
+            }
+        }
 
         System.Timers.Timer oStatusBarTimer = new System.Timers.Timer();
 
@@ -82,15 +116,18 @@ namespace KinectServer
             catch(Exception)
             {
             }
-
+          
             oServer = new KinectServer(oSettings);
             oServer.eSocketListChanged += new SocketListChangedHandler(UpdateListView);
             oTransferServer = new TransferServer();
             oTransferServer.lVertices = lAllVertices;
             oTransferServer.lColors = lAllColors;
-            oTransferServer.IBodies = lAllBodies;//just added this 
-            
-            
+            SizeRGB.Add(201);
+            SizeRGB.Add(201);
+            SizeRGB.Add(201);
+            SizePoint.Add(0.005f);
+            SizePoint.Add(0.005f);
+            SizePoint.Add(0.005f);
             
 
             InitializeComponent();
@@ -264,7 +301,7 @@ namespace KinectServer
             List<List<byte>> lFramesRGB = new List<List<byte>>();
             List<List<Single>> lFramesVerts = new List<List<Single>>();
             List<List<Body>> lFramesBody = new List<List<Body>>();
-
+            
             BackgroundWorker worker = (BackgroundWorker)sender;
             while (!worker.CancellationPending)
             {
@@ -280,22 +317,7 @@ namespace KinectServer
                     lAllCameraPoses.Clear();
 
    
-
-                    List<Single> HeadX = new List<Single>();
-                    List<Single> HeadY = new List<Single>();
-                    List<Single> HeadZ = new List<Single>();
-
                     
-
-                    List<Single> UpperabdomenX = new List<Single>();
-                    List<Single> UpperabdomenY = new List<Single>();
-                    List<Single> UpperabdomenZ = new List<Single>();
-
-                    List<Single> LegX = new List<Single>();
-                    List<Single> LegY = new List<Single>();
-                    List<Single> LegZ = new List<Single>();
-
-
 
                     List<Single> BodyVert = new List<Single>();
                     List<byte> BodyRGB = new List<byte>();
@@ -303,64 +325,76 @@ namespace KinectServer
                     List<Single> BodyX = new List<Single>();
                     List<Single> BodyY = new List<Single>();
                     List<Single> BodyZ = new List<Single>();
-
+                    List<float> BodyCenters = new List<float>(3);
                     List<Single> TempVerts = new List<Single>();
                     List<byte> TempRGB = new List<byte>();
-                   
+                    
+ 
                     for (int i = 0; i < lFramesRGB.Count; i++)
                     {
                         TempVerts.AddRange(lFramesVerts[i]);
                         TempRGB.AddRange(lFramesRGB[i]);
                         lAllBodies.AddRange(lFramesBody[i]);                       
                     }
-
-
-                    /**body segmentation starts here*/
-
-                    for (int i = 0; i < 6; i++)
+                    if (BodyViewIsOn == true)
                     {
+                        /**body segmentation starts here*/
 
-                        if (lAllBodies[i].bTracked)
+                        for (int i = 0; i < 6; i++)
                         {
-
-
-                            int pdidx = 0;
-                            int nAllVertices = TempVerts.Count;
-                            while (pdidx < nAllVertices)
+                            if (lAllBodies[i].bTracked)
                             {
-                                float ShoulderY = lAllBodies[i].lJoints[20].position.Y;
-                                float SpineBaseY = lAllBodies[i].lJoints[0].position.Y;
 
-                                
-                                BodySegmentWithVerticesArray(BodyVert, BodyRGB, lAllBodies, i, 0, TempVerts, TempRGB, pdidx, 1f, 1f, 1f, 1f, 1f, 1f, BodyX, BodyY, BodyZ);
-                                pdidx += 3;
+                                int pdidx = 0;
+                                int nAllVertices = TempVerts.Count;
+                                while (pdidx < nAllVertices)
+                                {
+                                    float ShoulderY = lAllBodies[i].lJoints[20].position.Y;
+                                    float SpineBaseY = lAllBodies[i].lJoints[0].position.Y;
+
+                                    BodySegmentWithVerticesArray(BodyVert, BodyRGB, lAllBodies, i, 0, TempVerts, TempRGB, pdidx, 1f, 1f, 1f, 1f, 1f, 1f);
+
+                                    pdidx += 3;
+                                }
 
                             }
 
+                            roationX(lAllBodies, i, BodyVert, 33, BodyX, BodyY, BodyZ, BodyCenters);
+                            scale(lAllBodies, i, BodyVert, size, 1f, size, BodyCenters);
 
 
                         }
 
-                        if (size != 0)
+                        lAllVertices.AddRange(SizePoint);
+                        lAllColors.AddRange(SizeRGB);
+
+                        if (StopIsOn == false)
                         {
-                            scale(lAllBodies, i, BodyVert, size, 1f, size, BodyX, BodyY, BodyZ);
+
+                           
+                            lAllVertices.AddRange(BodyVert);
+                            lAllColors.AddRange(BodyRGB);
+                            
+                        }
+                    }
+                    else {
+                        if(StopIsOn == false) {
+
+                            lAllVertices.AddRange(SizePoint);
+                            lAllColors.AddRange(SizeRGB);
+                            lAllVertices.AddRange(TempVerts);
+                            lAllColors.AddRange(TempRGB);
+                           
                         }
                         
                     }
-
-
                     
-                    lAllVertices.AddRange(BodyVert);
-                    lAllColors.AddRange(BodyRGB);
-                  
+                   
 
                     lAllCameraPoses.AddRange(oServer.lCameraPoses);
                 }
 
-               
-                
-
-                //Notes the fact that a new frame was downloaded, this is used to estimate the FPS.
+                   //Notes the fact that a new frame was downloaded, this is used to estimate the FPS.
                 if (oOpenGLWindow != null)
                     oOpenGLWindow.CloudUpdateTick();            
             }
@@ -578,55 +612,10 @@ namespace KinectServer
 
 
         public void BodySegmentWithVerticesArray(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
-            List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
-        {
-
-
-            if (body[bodyIndex].bTracked)
-            {
-                //Console.Write("This is working bodyIndex " + bodyIndex);
-                float jointX = lAllBodies[bodyIndex].lJoints[JointIndex].position.X;
-                float jointY = lAllBodies[bodyIndex].lJoints[JointIndex].position.Y;
-                float jointZ = lAllBodies[bodyIndex].lJoints[JointIndex].position.Z;
-
-                // Console.Write("This is working Joint X " + jointX + "\n");
-
-                if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
-                {
-                    //Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                    if (vertArray[vertIndex + 1] <= jointY + maxY && vertArray[vertIndex + 1] >= jointY - minY)
-                    {
-                        // Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                        if (vertArray[vertIndex + 2] <= jointZ + maxZ && vertArray[vertIndex + 2] >= jointZ - minZ)
-                        {
-
-
-                            BodyPartVert.Add(vertArray[vertIndex]);
-                            BodyPartVert.Add(vertArray[vertIndex + 1]);
-                            BodyPartVert.Add(vertArray[vertIndex + 2]);
-                            Xlist.Add(vertArray[vertIndex]);
-                            Ylist.Add(vertArray[vertIndex + 1]);
-                            Zlist.Add(vertArray[vertIndex + 2]);
-                            BodyPartRGB.Add(RGBArray[vertIndex]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 1]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 2]);
-
-                        }
-
-                    }
-
-                }
-            }
-
-        }
-
-        public void BodySegment(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
             List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ)
         {
 
-
+           
             if (body[bodyIndex].bTracked)
             {
                 //Console.Write("This is working bodyIndex " + bodyIndex);
@@ -635,7 +624,6 @@ namespace KinectServer
                 float jointZ = lAllBodies[bodyIndex].lJoints[JointIndex].position.Z;
 
                 // Console.Write("This is working Joint X " + jointX + "\n");
-
 
                 if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
                 {
@@ -652,134 +640,69 @@ namespace KinectServer
                             BodyPartVert.Add(vertArray[vertIndex]);
                             BodyPartVert.Add(vertArray[vertIndex + 1]);
                             BodyPartVert.Add(vertArray[vertIndex + 2]);
-
+                            
                             BodyPartRGB.Add(RGBArray[vertIndex]);
                             BodyPartRGB.Add(RGBArray[vertIndex + 1]);
                             BodyPartRGB.Add(RGBArray[vertIndex + 2]);
 
+                         
                         }
 
                     }
 
                 }
-            }
 
+              
+            }
+           
         }
 
-        public void BodySegmentWithAbsoluteMaxY(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
-            List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
-        {
-
-
-            if (body[bodyIndex].bTracked)
-            {
-                //Console.Write("This is working bodyIndex " + bodyIndex);
-                float jointX = lAllBodies[bodyIndex].lJoints[JointIndex].position.X;
-                float jointY = lAllBodies[bodyIndex].lJoints[JointIndex].position.Y;
-                float jointZ = lAllBodies[bodyIndex].lJoints[JointIndex].position.Z;
-
-                // Console.Write("This is working Joint X " + jointX + "\n");
-
-
-                if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
-                {
-                    //Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                    if (vertArray[vertIndex + 1] < maxY && vertArray[vertIndex + 1] >= jointY - minY)
-                    {
-                        // Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                        if (vertArray[vertIndex + 2] <= jointZ + maxZ && vertArray[vertIndex + 2] >= jointZ - minZ)
-                        {
-
-
-                            BodyPartVert.Add(vertArray[vertIndex]);
-                            BodyPartVert.Add(vertArray[vertIndex + 1]);
-                            BodyPartVert.Add(vertArray[vertIndex + 2]);
-                            Xlist.Add(vertArray[vertIndex]);
-                            Ylist.Add(vertArray[vertIndex + 1]);
-                            Zlist.Add(vertArray[vertIndex + 2]);
-                            BodyPartRGB.Add(RGBArray[vertIndex]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 1]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 2]);
-
-                        }
-
-                    }
-
-                }
-            }
-
-        }
-
-        public void BodySegmentWithAbsoluteMinY(List<Single> BodyPartVert, List<byte> BodyPartRGB, List<Body> body, int bodyIndex, int JointIndex,
-           List<Single> vertArray, List<byte> RGBArray, int vertIndex, float mixX, float maxX, float minY, float maxY, float minZ, float maxZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
-        {
-
-
-            if (body[bodyIndex].bTracked)
-            {
-                //Console.Write("This is working bodyIndex " + bodyIndex);
-                float jointX = lAllBodies[bodyIndex].lJoints[JointIndex].position.X;
-                float jointY = lAllBodies[bodyIndex].lJoints[JointIndex].position.Y;
-                float jointZ = lAllBodies[bodyIndex].lJoints[JointIndex].position.Z;
-
-                // Console.Write("This is working Joint X " + jointX + "\n");
-
-
-                if (vertArray[vertIndex] <= jointX + maxX && vertArray[vertIndex] >= jointX - mixX)
-                {
-                    //Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                    if (vertArray[vertIndex + 1] < maxY && vertArray[vertIndex + 1] >= minY)
-                    {
-                        // Console.Write("This is working vertIndex " + vertIndex + "\n");
-
-                        if (vertArray[vertIndex + 2] <= jointZ + maxZ && vertArray[vertIndex + 2] >= jointZ - minZ)
-                        {
-
-
-                            BodyPartVert.Add(vertArray[vertIndex]);
-                            BodyPartVert.Add(vertArray[vertIndex + 1]);
-                            BodyPartVert.Add(vertArray[vertIndex + 2]);
-                            Xlist.Add(vertArray[vertIndex]);
-                            Ylist.Add(vertArray[vertIndex + 1]);
-                            Zlist.Add(vertArray[vertIndex + 2]);
-                            BodyPartRGB.Add(RGBArray[vertIndex]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 1]);
-                            BodyPartRGB.Add(RGBArray[vertIndex + 2]);
-
-                        }
-
-                    }
-
-                }
-            }
-
-        }
-
-        public void scale(List<Body> body, int bodyIndex, List<Single> vertices, float scaleFactorX, float scaleFactorY, float scaleFactorZ, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist)
+       
+        public void scale(List<Body> body, int bodyIndex, List<Single> vertices, float scaleFactorX, float scaleFactorY, float scaleFactorZ, List<float> Centers)
         {
 
             if (body[bodyIndex].bTracked)
             {
 
-                float centerX = Center(Xlist);
-                float centerY = Center(Ylist);
-                float centerZ = Center(Zlist);
-
-                //Console.Write("The center is " + " X: " + centerX + " Y: " + centerY + " Z: " + centerZ + " \n");
+               
                 int verticesToread = 0;
                 while (verticesToread < vertices.Count)
                 {
-                    vertices[verticesToread] = ((vertices[verticesToread] - centerX) * scaleFactorX) + centerX;
-                    vertices[verticesToread + 1] = ((vertices[verticesToread + 1] - centerY) * scaleFactorY) + centerY;
-                    vertices[verticesToread + 2] = ((vertices[verticesToread + 2] - centerZ) * scaleFactorZ) + centerZ;
+                    vertices[verticesToread] = ((vertices[verticesToread] - Centers[0]) * scaleFactorX) + Centers[0];
+                    vertices[verticesToread + 1] = ((vertices[verticesToread + 1] - Centers[1]) * scaleFactorY) + Centers[1];
+                    vertices[verticesToread + 2] = ((vertices[verticesToread + 2] - Centers[2]) * scaleFactorZ) + Centers[2];
 
                     verticesToread += 3;
                 }
             }
 
+        }
+
+        public void roationX(List<Body> body, int bodyIndex, List<Single> vertices, double angle, List<Single> Xlist, List<Single> Ylist, List<Single> Zlist,List<float> Centers)
+        {
+            if (body[bodyIndex].bTracked)
+            {
+                Centers.Clear();
+                double radian = Math.PI * angle / 180.0;
+                int verticesToread = 0;
+                while (verticesToread < vertices.Count)
+                {
+                    vertices[verticesToread] = vertices[verticesToread];
+                    vertices[verticesToread + 1] = (vertices[verticesToread + 1] * (float)Math.Cos(radian)) - (vertices[verticesToread + 2] * (float)Math.Sin(radian));
+                    vertices[verticesToread + 2] = (vertices[verticesToread + 1] * (float)Math.Sin(radian)) + (vertices[verticesToread + 2] * (float)Math.Cos(radian));
+                    Xlist.Add(vertices[verticesToread]);
+                    Ylist.Add(vertices[verticesToread + 1]);
+                    Zlist.Add(vertices[verticesToread + 2]);
+
+                    verticesToread += 3;
+                }
+
+                Centers.Add(Center(Xlist));
+                Centers.Add(Center(Ylist));
+                Centers.Add(Center(Zlist));
+            }
+
+            
         }
 
         public float sum(List<Single> co)
@@ -808,54 +731,108 @@ namespace KinectServer
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
+            SizePoint.Clear();
+           
+                if (trackBar1.Value == 0)
+                {
+                    size = 0.7f;
+                    SizePoint.Add(0.005f);
+                    SizePoint.Add(0.005f);
+                    SizePoint.Add(0.005f);
 
+                }
+                if (trackBar1.Value == 1)
+                {
+                    size = 0.8f;
+                    SizePoint.Add(0.005f);
+                    SizePoint.Add(0.005f);
+                    SizePoint.Add(0.005f);
 
-            if (trackBar1.Value == 0)
-            {
-                size = 0.7f;
-            }
-            if (trackBar1.Value == 1)
-            {
-                size = 0.8f;
-            }
-            if (trackBar1.Value == 2)
-            {
+                }
+                if (trackBar1.Value == 2)
+                {
 
-                size = 0.9f;
-            }
-            if (trackBar1.Value == 3)
-            {
-                size = 1f;
-            }
-            if (trackBar1.Value == 4)
-            {
-                size = 1.1f;
+                    size = 0.9f;
+                    SizePoint.Add(0.005f);
+                    SizePoint.Add(0.005f);
+                    SizePoint.Add(0.005f);
+                }
+                if (trackBar1.Value == 3)
+                {
+                    size = 1f;
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                }
+                if (trackBar1.Value == 4)
+                {
+                    size = 1.1f;
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                }
+                if (trackBar1.Value == 5)
+                {
+                    size = 1.2f;
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                }
+                if (trackBar1.Value == 6)
+                {
+                    size = 1.3f;
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                    SizePoint.Add(0.007f);
+                }
+                if (trackBar1.Value == 7)
+                {
+                    size = 1.4f;
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                }
+                if (trackBar1.Value == 8)
+                {
+                    size = 1.5f;
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                }
+                if (trackBar1.Value == 9)
+                {
+                    size = 1.6f;
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                }
+                if (trackBar1.Value == 10)
+                {
+                    size = 1.7f;
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                    SizePoint.Add(0.009f);
+                }
+            
+    
+            //Console.Write("Size: " + size +"PointSize: " + SizePoint[0] + " " + SizePoint[1] + " "+ SizePoint[2] + "\n");
+        }
 
-            }
-            if (trackBar1.Value == 5)
-            {
-                size = 1.2f;
-            }
-            if (trackBar1.Value == 6)
-            {
-                size = 1.3f;
-            }
-            if (trackBar1.Value == 7)
-            {
-                size = 1.4f;
-            }
-            if (trackBar1.Value == 8)
-            {
-                size = 1.5f;
-            }
-            if (trackBar1.Value == 9)
-            {
-                size = 1.6f;
-            }
-            if(trackBar1.Value == 10)
-            {
-                size = 1.7f;
-            }
+        private void ResetHoloLens_Click(object sender, EventArgs e)
+        {
+            BodyViewIsOn = !BodyViewIsOn;
+           // oTransferServer.Resetting = IsOn;//just added this 
+        }
+
+        private void Height_Change_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Stop_Click(object sender, EventArgs e)
+        {
+            StopIsOn = !StopIsOn;
+           
         }
     }
 }
