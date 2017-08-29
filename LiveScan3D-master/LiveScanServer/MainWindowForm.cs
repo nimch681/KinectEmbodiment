@@ -31,6 +31,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Timers;
 
+
 using System.Diagnostics;
 
 
@@ -56,9 +57,20 @@ namespace KinectServer
 
         List<Single> SizePoint = new List<Single>();
         List<byte> SizeRGB = new List<byte>();
-       
+
+        List<float> sizelist = new List<float>();
+        Stack<int> randomNumberIndex = new Stack<int>();
+        Stack<int> similarRandomNumberIndex = new Stack<int>();
+        List<String> RowInScales = new List<String>();
+        List<String> RowInAnswers = new List<String>();
+        CsvFileWriter csv_scales;
+        CsvFileWriter csv_answers;
+
+        //List<int> randomNumberIndex = new List<int>();
 
         float size;
+
+
 
         bool bServerRunning = false;
         bool bRecording = false;
@@ -97,6 +109,51 @@ namespace KinectServer
             }
         }
 
+        private bool Scoll_IsOn;
+        public bool ScollIsOn
+        {
+            get
+            {
+                return Scoll_IsOn;
+            }
+            set
+            {
+                Scoll_IsOn = value;
+                ScollDis.Text = Scoll_IsOn ? "Ideal Size On" : "Ideal Size Off";
+                groupBox1.Enabled = ScollIsOn;
+            }
+        }
+
+        private bool SimilarBody_IsOn;
+        public bool SimilarBodyIsOn
+        {
+            get
+            {
+                return SimilarBody_IsOn;
+            }
+            set
+            {
+                SimilarBody_IsOn = value;
+                SimilarBody.Text = SimilarBody_IsOn ? "Similar Size On" : "Similar Size Off";
+                groupBox3.Enabled = SimilarBodyIsOn;
+            }
+        }
+
+        private bool randbutton_IsOn;
+        public bool randbuttonIsOn
+        {
+            get
+            {
+                return randbutton_IsOn;
+            }
+            set
+            {
+                randbutton_IsOn = value;
+                RandomBodiesArray.Text = randbutton_IsOn ? "Body Array is Not empty" : "Body Array is empty";
+                groupBox4.Enabled = randbuttonIsOn;
+            }
+        }
+
         System.Timers.Timer oStatusBarTimer = new System.Timers.Timer();
 
         KinectSettings oSettings = new KinectSettings();
@@ -128,9 +185,18 @@ namespace KinectServer
             SizePoint.Add(0.005f);
             SizePoint.Add(0.005f);
             SizePoint.Add(0.005f);
-            
-
+            sizelist.Add(0.6f);
+            sizelist.Add(0.7f);
+            sizelist.Add(0.8f);
+            sizelist.Add(0.9f);
+            sizelist.Add(1f);
+            sizelist.Add(1.1f);
+            sizelist.Add(1.2f);
+            sizelist.Add(1.3f);
+            sizelist.Add(1.4f);
+           
             InitializeComponent();
+           
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -328,6 +394,9 @@ namespace KinectServer
                     List<float> BodyCenters = new List<float>(3);
                     List<Single> TempVerts = new List<Single>();
                     List<byte> TempRGB = new List<byte>();
+
+                    
+
                     
  
                     for (int i = 0; i < lFramesRGB.Count; i++)
@@ -359,12 +428,14 @@ namespace KinectServer
 
                             }
 
-                            roationX(lAllBodies, i, BodyVert, 33, BodyX, BodyY, BodyZ, BodyCenters);
-                            scale(lAllBodies, i, BodyVert, size, 1f, size, BodyCenters);
 
+                            roationX(lAllBodies, i, BodyVert, 33, BodyX, BodyY, BodyZ, BodyCenters);                                       
+                            scale(lAllBodies, i, BodyVert, size, 1f, size, BodyCenters);
 
                         }
 
+
+                        CheckPointSize();
                         lAllVertices.AddRange(SizePoint);
                         lAllColors.AddRange(SizeRGB);
 
@@ -379,7 +450,7 @@ namespace KinectServer
                     }
                     else {
                         if(StopIsOn == false) {
-
+                            CheckPointSize();
                             lAllVertices.AddRange(SizePoint);
                             lAllColors.AddRange(SizeRGB);
                             lAllVertices.AddRange(TempVerts);
@@ -729,110 +800,582 @@ namespace KinectServer
             return Average(co);
         }
 
-        private void trackBar1_Scroll(object sender, EventArgs e)
-        {
-            SizePoint.Clear();
-           
-                if (trackBar1.Value == 0)
-                {
-                    size = 0.7f;
-                    SizePoint.Add(0.005f);
-                    SizePoint.Add(0.005f);
-                    SizePoint.Add(0.005f);
-
-                }
-                if (trackBar1.Value == 1)
-                {
-                    size = 0.8f;
-                    SizePoint.Add(0.005f);
-                    SizePoint.Add(0.005f);
-                    SizePoint.Add(0.005f);
-
-                }
-                if (trackBar1.Value == 2)
-                {
-
-                    size = 0.9f;
-                    SizePoint.Add(0.005f);
-                    SizePoint.Add(0.005f);
-                    SizePoint.Add(0.005f);
-                }
-                if (trackBar1.Value == 3)
-                {
-                    size = 1f;
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                }
-                if (trackBar1.Value == 4)
-                {
-                    size = 1.1f;
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                }
-                if (trackBar1.Value == 5)
-                {
-                    size = 1.2f;
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                }
-                if (trackBar1.Value == 6)
-                {
-                    size = 1.3f;
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                    SizePoint.Add(0.007f);
-                }
-                if (trackBar1.Value == 7)
-                {
-                    size = 1.4f;
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                }
-                if (trackBar1.Value == 8)
-                {
-                    size = 1.5f;
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                }
-                if (trackBar1.Value == 9)
-                {
-                    size = 1.6f;
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                }
-                if (trackBar1.Value == 10)
-                {
-                    size = 1.7f;
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                    SizePoint.Add(0.009f);
-                }
-            
-    
-            //Console.Write("Size: " + size +"PointSize: " + SizePoint[0] + " " + SizePoint[1] + " "+ SizePoint[2] + "\n");
-        }
-
+       
         private void ResetHoloLens_Click(object sender, EventArgs e)
         {
             BodyViewIsOn = !BodyViewIsOn;
            // oTransferServer.Resetting = IsOn;//just added this 
         }
 
-        private void Height_Change_Click(object sender, EventArgs e)
-        {
-
-        }
+       
 
         private void Stop_Click(object sender, EventArgs e)
         {
             StopIsOn = !StopIsOn;
            
+        }
+
+        private void ScollDis_Click(object sender, EventArgs e)
+        {
+           
+            similarRandomNumberIndex.Clear();
+            ScollIsOn = !ScollIsOn;
+            //groupBox1.Enabled = ScollIsOn;
+
+            if (ScollIsOn == true)
+            {
+                Random random = new Random();
+
+                var randomNumbers = Enumerable.Range(0, 9).OrderBy(x => random.Next()).Take(9).ToList();
+
+
+                int i = 0;
+
+                while (i < 9)
+                {
+
+                    similarRandomNumberIndex.Push(randomNumbers[i]);
+
+
+
+                    i++;
+
+                }
+
+                int bodyIndex = similarRandomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                idealText.Text = size.ToString();
+                CounterIdeal.Text = -(similarRandomNumberIndex.Count - 9) + "";
+
+                RowInScales.Add("Ideal Body");
+                RowInAnswers.Add("IdealBodyAns");
+                RowInScales.Add(size + "");
+                // CheckPointSize();
+            }
+        }
+
+        private void SimilarBody_Click(object sender, EventArgs e)
+        {
+           
+            similarRandomNumberIndex.Clear();
+            SimilarBodyIsOn = !SimilarBodyIsOn;
+            
+
+            if (SimilarBodyIsOn == true)
+            {
+                Random random = new Random();
+
+                var randomNumbers = Enumerable.Range(0, 9).OrderBy(x => random.Next()).Take(9).ToList();
+              
+
+                int i = 0;
+
+                while (i < 9)
+                {
+
+                    similarRandomNumberIndex.Push(randomNumbers[i]);
+
+                    
+
+                    i++;
+
+                }
+
+                int bodyIndex = similarRandomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                sizeText.Text = size.ToString();
+                CounterSimilar.Text = -(similarRandomNumberIndex.Count - 9) + "";
+                RowInScales.Add("Similar Body");
+                RowInAnswers.Add("SimilarBodyAns");
+                RowInScales.Add(size + "");
+                // CheckPointSize();
+            }
+
+        }
+
+       
+        
+
+      
+
+        private void RandomBodiesArray_Click(object sender, EventArgs e)
+        {
+            randomNumberIndex.Clear();
+            randbuttonIsOn = !randbuttonIsOn;
+            
+
+            if (randbuttonIsOn == true)
+            {
+                Random random = new Random();
+
+                var randomNumbers = Enumerable.Range(0, 9).OrderBy(x => random.Next()).Take(9).ToList();
+                var randomNumbers2 = Enumerable.Range(0, 9).OrderBy(x => random.Next()).Take(9).ToList();
+                var randomNumbers3 = Enumerable.Range(0, 9).OrderBy(x => random.Next()).Take(9).ToList();
+                var randomNumbers4 = Enumerable.Range(0, 9).OrderBy(x => random.Next()).Take(9).ToList();
+                var randomNumbers5 = Enumerable.Range(0, 9).OrderBy(x => random.Next()).Take(9).ToList();
+
+                List<int> randomTemplist = new List<int>();
+                randomTemplist.AddRange(randomNumbers);
+                randomTemplist.AddRange(randomNumbers2);
+                randomTemplist.AddRange(randomNumbers3);
+                randomTemplist.AddRange(randomNumbers4);
+                randomTemplist.AddRange(randomNumbers5);
+
+                int i = 0;
+
+                while (i < 45)
+                {
+
+                    randomNumberIndex.Push(randomTemplist[i]);
+
+
+                    i++;
+
+                }
+                
+                int bodyIndex = randomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                Counter45.Text = -(randomNumberIndex.Count - 45) + "";
+                RandomBodyText.Text = size.ToString();
+                RowInScales.Add("Random45");
+                RowInAnswers.Add("Answers45");
+               
+                // CheckPointSize();
+            }
+
+        }
+
+
+
+        private void BodySizeYes_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if(SimilarBodyIsOn == true)
+            {
+                return;
+            }
+            if(ScollIsOn == true)
+            {
+                return;
+            }
+
+            RowInAnswers.Add("1");
+            RowInScales.Add(size + "");
+                
+            if (randomNumberIndex.Count != 0)
+            {
+                int bodyIndex = randomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                RandomBodyText.Text = size.ToString();
+                Counter45.Text = -(randomNumberIndex.Count - 45) + "";
+
+            }
+            else
+            {
+                Console.WriteLine("Array is Empty or size is 0");
+                randbuttonIsOn = false;
+            }
+
+            StopIsOn = true;
+        }
+
+
+        private void BodySizeNo_Click(object sender, EventArgs e)
+        {
+            if(StopIsOn == true)
+            {
+                return;
+            }
+            if (SimilarBodyIsOn == true)
+            {
+                return;
+            }
+            if (ScollIsOn == true)
+            {
+                return;
+            }
+
+            RowInAnswers.Add("0");
+            RowInScales.Add(size + "");
+
+            if (randomNumberIndex.Count != 0)
+            {
+                int bodyIndex = randomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                RandomBodyText.Text = size.ToString();
+                Counter45.Text = -(randomNumberIndex.Count - 45) + "";
+
+            }
+            else
+            {
+                Console.WriteLine("Array is Empty or size is 0");
+                randbuttonIsOn = false;
+            }
+
+            StopIsOn = true;
+        }
+
+        private void NextButton_Click(object sender, EventArgs e)
+        {
+           
+            StopIsOn = false;
+        }
+
+        private void CheckPointSize()
+        {
+            Console.WriteLine("This is working");
+            SizePoint.Clear();
+            
+           
+            float pointSize = (size / 200f) + 0.003f;
+            SizePoint.Add(pointSize);
+            SizePoint.Add(pointSize);
+            SizePoint.Add(pointSize);
+            Console.WriteLine(Size + ": " + pointSize);
+        }
+
+        private void plusSimilar_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (ScollIsOn == true)
+            {
+                return;
+            }
+            if(size >= 1.4f)
+            {
+                return;
+            }
+            
+            
+            
+            
+            size += 0.1f;
+            sizeText.Text = size.ToString();
+        }
+
+        private void minusSimilar_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (ScollIsOn == true)
+            {
+                return;
+            }
+            if (size <= 0.6f)
+            {
+                return;
+            }
+           
+
+            size -= 0.1f;
+            sizeText.Text = size.ToString();
+        }
+
+        private void SimilarYes_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (ScollIsOn == true)
+            {
+                return;
+            }
+
+            
+            RowInAnswers.Add(size+"");
+
+
+            if (similarRandomNumberIndex.Count != 0)
+            {
+                int bodyIndex = similarRandomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                sizeText.Text = size.ToString();
+                RowInScales.Add(size + "");
+                CounterSimilar.Text = -(similarRandomNumberIndex.Count - 9) + "";
+
+
+
+            }
+            else
+            {
+                Console.WriteLine("Array is Empty or size is 0");
+                SimilarBodyIsOn = false;
+            }
+
+            StopIsOn = true;
+        }
+
+        private void SimilarNo_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (ScollIsOn == true)
+            {
+                return;
+            }
+
+            RowInAnswers.Add("0");
+           
+
+
+            if (similarRandomNumberIndex.Count != 0)
+            {
+                int bodyIndex = similarRandomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                sizeText.Text = size.ToString();
+                RowInScales.Add(size + "");
+                CounterSimilar.Text = -(similarRandomNumberIndex.Count - 9) + "";
+               
+
+
+
+            }
+            else
+            {
+                Console.WriteLine("Array is Empty or size is 0");
+                SimilarBodyIsOn = false;
+            }
+
+            StopIsOn = true;
+        }
+
+        private void similarNext_Click(object sender, EventArgs e)
+        {
+            StopIsOn = false;
+        }
+
+        private void IdealPlus_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (SimilarBodyIsOn == true)
+            {
+                return;
+            }
+            if (size >= 1.4f)
+            {
+                return;
+            }
+
+
+            size += 0.1f;
+            idealText.Text = size.ToString();
+        }
+
+        private void IdeaMinus_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (SimilarBodyIsOn == true)
+            {
+                return;
+            }
+            if (size <= 0.6f)
+            {
+                return;
+            }
+
+
+            size -= 0.1f;
+            idealText.Text = size.ToString();
+        }
+
+        private void IdeaYes_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (SimilarBodyIsOn == true)
+            {
+                return;
+            }
+
+            RowInAnswers.Add(size + "");
+           
+
+
+            if (similarRandomNumberIndex.Count != 0)
+            {
+                int bodyIndex = similarRandomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                idealText.Text = size.ToString();
+                RowInScales.Add(size + "");
+                CounterIdeal.Text = -(similarRandomNumberIndex.Count - 9) + "";
+
+
+
+            }
+            else
+            {
+                Console.WriteLine("Array is Empty or size is 0");
+                ScollIsOn = false;
+            }
+
+            StopIsOn = true;
+        }
+
+        private void IdealNo_Click(object sender, EventArgs e)
+        {
+            if (StopIsOn == true)
+            {
+                return;
+            }
+            if (randbuttonIsOn == true)
+            {
+                return;
+            }
+            if (SimilarBodyIsOn == true)
+            {
+                return;
+            }
+
+            RowInAnswers.Add("0");
+           
+
+
+            if (similarRandomNumberIndex.Count != 0)
+            {
+                int bodyIndex = similarRandomNumberIndex.Pop();
+                size = sizelist[bodyIndex];
+                idealText.Text = size.ToString();
+                RowInScales.Add(size + "");
+                CounterIdeal.Text = -(similarRandomNumberIndex.Count - 9) + "";
+
+
+
+            }
+            else
+            {
+                Console.WriteLine("Array is Empty or size is 0");
+                ScollIsOn  = false;
+            }
+
+            StopIsOn = true;
+        }
+
+        private void IdealNext_Click(object sender, EventArgs e)
+        {
+            StopIsOn = false;
+        }
+
+        private void Cancel_Click(object sender, EventArgs e)
+        {
+            RowInScales.Clear();
+            randomNumberIndex.Clear();
+            similarRandomNumberIndex.Clear();
+            ScollIsOn = false;
+            randbuttonIsOn = false;
+            SimilarBodyIsOn = false;
+          
+        }
+
+        private void Save_Click(object sender, EventArgs e)
+        {
+            if (csv_scales != null)
+            {
+                csv_scales.WriteRow(RowInScales);
+                csv_answers.WriteRow(RowInAnswers);
+                
+
+                RowInScales.Clear();
+                RowInAnswers.Clear();
+                randomNumberIndex.Clear();
+                similarRandomNumberIndex.Clear();
+                ScollIsOn = false;
+                randbuttonIsOn = false;
+                SimilarBodyIsOn = false;
+            }
+        }
+
+        private void New_Click(object sender, EventArgs e)
+        {
+            RowInScales.Clear();
+            RowInAnswers.Clear();
+            randomNumberIndex.Clear();
+            similarRandomNumberIndex.Clear();
+            ScollIsOn = false;
+            randbuttonIsOn = false;
+            SimilarBodyIsOn = false;
+            
+            if(ParticipantsID.Text != null)
+            {
+               
+                RowInAnswers.Add(ParticipantsID.Text);
+                RowInScales.Add(ParticipantsID.Text); 
+            }
+           
+                      
+        }
+
+        private void AddFile_Click(object sender, EventArgs e)
+        {
+            string filePath = "C:\\Users\\nimch681\\Documents\\LiveScan3D\\LiveScan3D-master";
+
+          
+                String scalesFileString = filePath + "/Holo_scales.csv";
+                csv_scales = new CsvFileWriter(scalesFileString);
+                String answersFileString = filePath + "/Holo_answers.csv";
+                csv_answers = new CsvFileWriter(answersFileString);
+              
+            
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (csv_scales != null)
+            {
+                csv_scales.Dispose();
+                csv_answers.Dispose();
+            }
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
